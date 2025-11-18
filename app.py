@@ -9,14 +9,19 @@ app = Flask(__name__)
 # ------------------------------------------------------
 #  Firebase Admin – Inizializzazione sicura (Render)
 # ------------------------------------------------------
-# Su Render la chiave verrà passata come variabile di ambiente "FIREBASE_KEY"
 firebase_key_json = os.environ.get("FIREBASE_KEY")
 
 if firebase_key_json:
-    cred = credentials.Certificate(json.loads(firebase_key_json))
+    # Render: la private key contiene \n, vanno convertiti in newline reali
+    key_dict = json.loads(firebase_key_json)
+    if "private_key" in key_dict:
+        key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
+
+    cred = credentials.Certificate(key_dict)
     firebase_admin.initialize_app(cred)
+
 else:
-    # Modalità locale: usa il file serviceAccountKey.json
+    # Locale: usa il file serviceAccountKey.json
     if os.path.exists("serviceAccountKey.json"):
         cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(cred)
